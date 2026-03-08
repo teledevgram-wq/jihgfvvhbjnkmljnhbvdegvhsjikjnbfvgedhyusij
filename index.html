@@ -344,44 +344,46 @@ function formatMessage(text) {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;');
     
-    // Обработка многострочных цитат (все строки с > в один блок)
+    // Разбиваем на строки
     let lines = formatted.split('\n');
     let result = [];
-    let inQuote = false;
-    let quoteContent = [];
+    let i = 0;
     
-    for (let line of lines) {
-        // Проверяем, начинается ли строка с &gt; (это > после замены)
+    while (i < lines.length) {
+        let line = lines[i];
+        
+        // Проверяем, начинается ли строка с '>'
         if (line.trim().startsWith('&gt;')) {
-            // Убираем '&gt; ' из начала
-            let content = line.replace(/^(&gt;\s?)/, '');
-            quoteContent.push(content);
-            inQuote = true;
-        } else {
-            if (inQuote) {
-                // Закрываем цитату
-                result.push('<blockquote>' + quoteContent.join('<br>') + '</blockquote>');
-                quoteContent = [];
-                inQuote = false;
+            let quoteLines = [];
+            
+            // Собираем все последовательные строки с '>'
+            while (i < lines.length && lines[i].trim().startsWith('&gt;')) {
+                // Убираем '&gt;' и пробел в начале
+                let content = lines[i].replace(/^(&gt;\s?)/, '');
+                quoteLines.push(content);
+                i++;
             }
+            
+            // Объединяем с <br> (как в Python объединялись с \n)
+            if (quoteLines.length > 0) {
+                result.push('<blockquote>' + quoteLines.join('<br>') + '</blockquote>');
+            }
+        } else {
             result.push(line);
+            i++;
         }
-    }
-    
-    // Если цитата была в конце
-    if (inQuote) {
-        result.push('<blockquote>' + quoteContent.join('<br>') + '</blockquote>');
     }
     
     formatted = result.join('\n');
     
-    // Обработка остального форматирования
+    // Обработка жирного текста, курсива, кода
     formatted = formatted
         .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
         .replace(/\*(.*?)\*/g, '<b>$1</b>')
         .replace(/_(.*?)_/g, '<em>$1</em>')
         .replace(/`(.*?)`/g, '<code>$1</code>');
     
+    // Заменяем переносы строк на <br>
     return formatted.replace(/\n/g, '<br>');
 }
         
@@ -495,3 +497,4 @@ function formatMessage(text) {
 </body>
 
 </html>
+
