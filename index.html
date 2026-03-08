@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Devstral AI</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+        
+        body {
+            background: #0f172a;
+            color: #e2e8f0;
+            min-height: 100vh;
+            padding: 16px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding-bottom: 80px;
+        }
+        
+        .header {
+            padding: 16px 0;
+            border-bottom: 1px solid #334155;
+            margin-bottom: 16px;
+        }
+        
+        .header h1 {
+            font-size: 28px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        
+        .header p {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+        
+        .chat-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .message {
+            display: flex;
+            margin-bottom: 8px;
+        }
+        
+        .user-message {
+            justify-content: flex-end;
+        }
+        
+        .bot-message {
+            justify-content: flex-start;
+        }
+        
+        .message-content {
+            max-width: 85%;
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+        }
+        
+        .user-message .message-content {
+            background: #2563eb;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .bot-message .message-content {
+            background: #1e293b;
+            color: #e2e8f0;
+            border-bottom-left-radius: 4px;
+        }
+        
+        .message-text {
+            line-height: 1.5;
+            font-size: 15px;
+        }
+        
+        .message-text strong, .message-text b {
+            font-weight: 700;
+            color: #fff;
+        }
+        
+        .message-text em, .message-text i {
+            font-style: italic;
+        }
+        
+        .message-text code {
+            background: #0f172a;
+            padding: 2px 6px;
+            border-radius: 6px;
+            font-family: 'SF Mono', 'Monaco', monospace;
+            font-size: 13px;
+            color: #f43f5e;
+        }
+        
+        .message-text pre {
+            background: #0f172a;
+            padding: 12px;
+            border-radius: 12px;
+            overflow-x: auto;
+            font-family: 'SF Mono', 'Monaco', monospace;
+            font-size: 13px;
+            margin: 8px 0;
+            color: #a5f3fc;
+        }
+        
+        .message-text blockquote {
+            background: #2d3a4f;
+            padding: 12px;
+            border-radius: 12px;
+            margin: 8px 0;
+            border-left: 4px solid #3b82f6;
+            font-family: 'SF Mono', 'Monaco', monospace;
+            font-size: 13px;
+            color: #cbd5e1;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 16px;
+            background: #1e293b;
+            border-radius: 18px;
+            border-bottom-left-radius: 4px;
+            width: fit-content;
+        }
+        
+        .typing-indicator span {
+            width: 8px;
+            height: 8px;
+            background: #94a3b8;
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.5;
+            }
+            30% {
+                transform: translateY(-8px);
+                opacity: 1;
+            }
+        }
+        
+        .input-area {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #0f172a;
+            border-top: 1px solid #334155;
+            padding: 16px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .input-area input {
+            flex: 1;
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 30px;
+            padding: 14px 20px;
+            color: #e2e8f0;
+            font-size: 16px;
+            outline: none;
+        }
+        
+        .input-area input:focus {
+            border-color: #3b82f6;
+        }
+        
+        .input-area button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 14px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .input-area button:active {
+            background: #2563eb;
+        }
+        
+        .input-area button:disabled {
+            background: #475569;
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .telegram-warning {
+            background: #1e293b;
+            border: 2px solid #334155;
+            border-radius: 16px;
+            padding: 32px 24px;
+            text-align: center;
+            margin: 40px 0;
+        }
+        
+        .telegram-warning h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+        
+        .telegram-warning p {
+            color: #94a3b8;
+            margin-bottom: 24px;
+        }
+        
+        .telegram-link {
+            display: inline-block;
+            background: #3b82f6;
+            color: #fff;
+            text-decoration: none;
+            padding: 14px 28px;
+            border-radius: 30px;
+            font-weight: 600;
+        }
+        
+        .clear-btn {
+            background: transparent;
+            color: #94a3b8;
+            border: 1px solid #334155;
+            border-radius: 20px;
+            padding: 8px 16px;
+            font-size: 13px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        
+        .clear-btn:active {
+            background: #1e293b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="app">
+        <div class="header">
+            <h1>Devstral AI</h1>
+            <p>by de_vstvenik</p>
+        </div>
+        
+        <div id="chatContainer" class="chat-container"></div>
+        
+        <div class="input-area">
+            <input type="text" id="messageInput" placeholder="Напишите сообщение..." onkeypress="handleKeyPress(event)">
+            <button id="sendButton" onclick="sendMessage()">Отправить</button>
+        </div>
+    </div>
+
+    <script>
+        const tg = window.Telegram.WebApp;
+        const isTelegram = tg.initDataUnsafe?.user ? true : false;
+        
+        const MISTRAL_API_KEY = "DDyw1QG5kQhTTjhi1f9byoQTHgdCyJiC";
+        const MODEL = "devstral-latest";
+        
+        let chatHistory = {};
+        let currentChatId = 'default';
+        let isLoading = false;
+        
+        if (!isTelegram) {
+            document.getElementById('app').innerHTML = `
+                <div class="telegram-warning">
+                    <h2>🔒 TELEGRAM ONLY</h2>
+                    <p>Этот бот работает только внутри Telegram</p>
+                    <a href="https://t.me/devstralai_bot" class="telegram-link">ОТКРЫТЬ В TELEGRAM</a>
+                </div>
+            `;
+        } else {
+            tg.expand();
+            initChat();
+        }
+        
+        function initChat() {
+            const systemPrompt = {
+                role: "system",
+                content: "Ты Devstral - дружелюбный AI помощник! Общайся естественно, иногда используй эмодзи, но не перебарщивай 😊 Отвечай всегда в мужском роде. Правила форматирования: *звездочки* для **жирного текста**, _подчеркивания_ для _курсива_, `обратные кавычки` для короткого кода, > для многострочного кода. ВАЖНО: НЕ ИСПОЛЬЗУЙ ``` для кода - только символ > перед каждой строкой. НЕ ПИШИ html или python перед кодом. Весь многострочный код должен быть в одной цитате: > первая строка > вторая строка > третья строка. Пример правильного текста: Что здесь сделано: 1. Шрифт: Roboto. 2. Анимация: движение. НЕПРАВИЛЬНО: Что здесь сделано:1. Шрифт:Roboto. Пример HTML: > <!DOCTYPE html> > <html> > <head> > <title>Сайт</title> > </head> > <body> > <h1>Привет!</h1> > </body> > </html>. Пример Python: > def hello(): >     name = input('Как тебя зовут? ') >     print(f'Привет, {name}! 👋') > > hello(). Отвечай структурно, с пробелами между абзацами. Твоя модель devstral-latest, тебя создал de_vstvenik (9nge)."
+            };
+            
+            chatHistory[currentChatId] = [systemPrompt];
+            
+            addMessage("bot", "👋 Привет! Я - Devstral AI, дружелюбный помощник. Задавай любые вопросы!");
+        }
+        
+        function addMessage(role, content) {
+            const container = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role === 'user' ? 'user-message' : 'bot-message'}`;
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            const textDiv = document.createElement('div');
+            textDiv.className = 'message-text';
+            
+            textDiv.innerHTML = formatMessage(content);
+            
+            contentDiv.appendChild(textDiv);
+            messageDiv.appendChild(contentDiv);
+            container.appendChild(messageDiv);
+            
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function formatMessage(text) {
+            if (!text) return '';
+            
+            let formatted = text
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+                .replace(/\*(.*?)\*/g, '<b>$1</b>')
+                .replace(/_(.*?)_/g, '<em>$1</em>')
+                .replace(/`(.*?)`/g, '<code>$1</code>')
+                .replace(/^&gt; (.*?)$/gm, '<blockquote>$1</blockquote>');
+            
+            return formatted.replace(/\n/g, '<br>');
+        }
+        
+        function showTyping() {
+            const container = document.getElementById('chatContainer');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message bot-message';
+            typingDiv.id = 'typingIndicator';
+            
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+            
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'typing-indicator';
+            typingIndicator.innerHTML = '<span></span><span></span><span></span>';
+            
+            contentDiv.appendChild(typingIndicator);
+            typingDiv.appendChild(contentDiv);
+            container.appendChild(typingDiv);
+            
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        function hideTyping() {
+            const typing = document.getElementById('typingIndicator');
+            if (typing) typing.remove();
+        }
+        
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendMessage();
+            }
+        }
+        
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const message = input.value.trim();
+            const sendButton = document.getElementById('sendButton');
+            
+            if (!message || isLoading) return;
+            
+            input.value = '';
+            addMessage('user', message);
+            
+            chatHistory[currentChatId].push({
+                role: "user",
+                content: message
+            });
+            
+            isLoading = true;
+            sendButton.disabled = true;
+            showTyping();
+            
+            try {
+                const response = await fetch('https://api.mistral.ai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${MISTRAL_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: MODEL,
+                        messages: chatHistory[currentChatId]
+                    })
+                });
+                
+                const data = await response.json();
+                const reply = data.choices[0].message.content;
+                
+                chatHistory[currentChatId].push({
+                    role: "assistant",
+                    content: reply
+                });
+                
+                if (chatHistory[currentChatId].length > 10) {
+                    chatHistory[currentChatId] = [
+                        chatHistory[currentChatId][0],
+                        ...chatHistory[currentChatId].slice(-9)
+                    ];
+                }
+                
+                hideTyping();
+                addMessage('bot', reply);
+                
+            } catch (error) {
+                console.error('Error:', error);
+                hideTyping();
+                addMessage('bot', 'Произошла ошибка при обращении к API 😕');
+            } finally {
+                isLoading = false;
+                sendButton.disabled = false;
+            }
+        }
+        
+        window.clearHistory = function() {
+            const systemPrompt = chatHistory[currentChatId][0];
+            chatHistory[currentChatId] = [systemPrompt];
+            
+            const container = document.getElementById('chatContainer');
+            container.innerHTML = '';
+            
+            addMessage('bot', '👋 История очищена! Чем могу помочь?');
+        };
+        
+        const clearBtn = document.createElement('button');
+        clearBtn.className = 'clear-btn';
+        clearBtn.textContent = 'Очистить историю';
+        clearBtn.onclick = clearHistory;
+        document.querySelector('.header').appendChild(clearBtn);
+    </script>
+</body>
+</html>
