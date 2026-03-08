@@ -337,20 +337,53 @@
             container.scrollTop = container.scrollHeight;
         }
         
-        function formatMessage(text) {
-            if (!text) return '';
-            
-            let formatted = text
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-                .replace(/\*(.*?)\*/g, '<b>$1</b>')
-                .replace(/_(.*?)_/g, '<em>$1</em>')
-                .replace(/`(.*?)`/g, '<code>$1</code>')
-                .replace(/^&gt; (.*?)$/gm, '<blockquote>$1</blockquote>');
-            
-            return formatted.replace(/\n/g, '<br>');
+function formatMessage(text) {
+    if (!text) return '';
+    
+    let formatted = text
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    
+    // Обработка многострочных цитат (все строки с > в один блок)
+    let lines = formatted.split('\n');
+    let result = [];
+    let inQuote = false;
+    let quoteContent = [];
+    
+    for (let line of lines) {
+        // Проверяем, начинается ли строка с &gt; (это > после замены)
+        if (line.trim().startsWith('&gt;')) {
+            // Убираем '&gt; ' из начала
+            let content = line.replace(/^(&gt;\s?)/, '');
+            quoteContent.push(content);
+            inQuote = true;
+        } else {
+            if (inQuote) {
+                // Закрываем цитату
+                result.push('<blockquote>' + quoteContent.join('<br>') + '</blockquote>');
+                quoteContent = [];
+                inQuote = false;
+            }
+            result.push(line);
         }
+    }
+    
+    // Если цитата была в конце
+    if (inQuote) {
+        result.push('<blockquote>' + quoteContent.join('<br>') + '</blockquote>');
+    }
+    
+    formatted = result.join('\n');
+    
+    // Обработка остального форматирования
+    formatted = formatted
+        .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
+        .replace(/\*(.*?)\*/g, '<b>$1</b>')
+        .replace(/_(.*?)_/g, '<em>$1</em>')
+        .replace(/`(.*?)`/g, '<code>$1</code>');
+    
+    return formatted.replace(/\n/g, '<br>');
+}
         
         function showTyping() {
             const container = document.getElementById('chatContainer');
@@ -460,4 +493,5 @@
         document.querySelector('.header').appendChild(clearBtn);
     </script>
 </body>
+
 </html>
